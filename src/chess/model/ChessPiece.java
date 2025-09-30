@@ -35,5 +35,19 @@ public abstract class ChessPiece extends Piece {
         return targetPiece != null && targetPiece.getColour() != colour;
     }
 
+    protected void sweepDirection(int[] dir, boolean[][] mat, Position position) {
+        Position pos = new Position(position.getRow() + dir[0], position.getColumn() + dir[1]);
+
+        while (getBoard().positionExists(pos) && !getBoard().thereIsAPiece(pos)) {
+            mat[pos.getRow()][pos.getColumn()] = true;
+            pos.setValues(pos.getRow() + dir[0], pos.getColumn() + dir[1]);
+        }
+
+        if (getBoard().positionExists(pos) && isThereOpponentPiece(pos)) {
+            mat[pos.getRow()][pos.getColumn()] = true;
+        }
+    }
+
+
 
 }
