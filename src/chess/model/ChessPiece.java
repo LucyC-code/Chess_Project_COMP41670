@@ -11,7 +11,7 @@ public abstract class ChessPiece extends Piece {
     private Colour colour;
 
     public ChessPiece(Board board, Colour colour) {
-        super(board);
+        super(board, colour);
         this.colour = colour;
     }
 
