@@ -29,24 +29,38 @@ public class ChessMatch {
         board.placePiece(piece, new ChessPosition(column, row).toPosition());
     }
 
-    private void initialSetup() {
-        // White King
-        placeNewPiece('e', 1, new King(board, Colour.WHITE, this));
 
-        // White Pawns
+    private void initialSetup() {
+        // White pieces
+        placeNewPiece('a', 1, new Rook(board, Colour.WHITE));
+        placeNewPiece('b', 1, new Knight(board, Colour.WHITE));
+        placeNewPiece('c', 1, new Bishop(board, Colour.WHITE));
+        placeNewPiece('d', 1, new Queen(board, Colour.WHITE));
+        placeNewPiece('e', 1, new King(board, Colour.WHITE, this));
+        placeNewPiece('f', 1, new Bishop(board, Colour.WHITE));
+        placeNewPiece('g', 1, new Knight(board, Colour.WHITE));
+        placeNewPiece('h', 1, new Rook(board, Colour.WHITE));
+
         for (char c = 'a'; c <= 'h'; c++) {
             placeNewPiece(c, 2, new Pawn(board, Colour.WHITE, this));
         }
 
-        // Black King
+// Black pieces
+        placeNewPiece('a', 8, new Rook(board, Colour.BLACK));
+        placeNewPiece('b', 8, new Knight(board, Colour.BLACK));
+        placeNewPiece('c', 8, new Bishop(board, Colour.BLACK));
+        placeNewPiece('d', 8, new Queen(board, Colour.BLACK));
         placeNewPiece('e', 8, new King(board, Colour.BLACK, this));
+        placeNewPiece('f', 8, new Bishop(board, Colour.BLACK));
+        placeNewPiece('g', 8, new Knight(board, Colour.BLACK));
+        placeNewPiece('h', 8, new Rook(board, Colour.BLACK));
 
-        // Black Pawns
         for (char c = 'a'; c <= 'h'; c++) {
             placeNewPiece(c, 7, new Pawn(board, Colour.BLACK, this));
         }
+
+
     }
 
-
-
 }
+
