@@ -18,9 +18,8 @@ public class Pawn extends ChessPiece {
     @Override
     public boolean[][] possibleMoves() {
         boolean[][] mat = new boolean[getBoard().getRows()][getBoard().getColumns()];
-        int dir = (getColour() == Colour.WHITE) ? -1 : 1;
-        int startRow = (getColour() == Colour.WHITE) ? 6 : 1;
-        int enPassantRow = (getColour() == Colour.WHITE) ? 3 : 4;
+        int dir = (getColour() == Colour.WHITE) ? -1 : 1;  // movement direction
+        int startRow = (getColour() == Colour.WHITE) ? 6 : 1; // starting row (0-indexed, row 6 = white pawns, row 1 = black pawns)
 
         Board board = getBoard();
 
@@ -29,17 +28,32 @@ public class Pawn extends ChessPiece {
         if (board.positionExists(oneStep) && !board.thereIsAPiece(oneStep)) {
             mat[oneStep.getRow()][oneStep.getColumn()] = true;
 
+            // Two-step move from starting row
             Position twoStep = new Position(position.getRow() + 2 * dir, position.getColumn());
             if (position.getRow() == startRow && board.positionExists(twoStep) && !board.thereIsAPiece(twoStep)) {
                 mat[twoStep.getRow()][twoStep.getColumn()] = true;
             }
         }
-    }
 
+        // Capture diagonally left
+        Position p = new Position(position.getRow() + dir, position.getColumn() - 1);
+        if (board.positionExists(p) && isThereOpponentPiece(p)) {
+            mat[p.getRow()][p.getColumn()] = true;
+        }
+
+        // Capture diagonally right
+        p.setValues(position.getRow() + dir, position.getColumn() + 1);
+        if (board.positionExists(p) && isThereOpponentPiece(p)) {
+            mat[p.getRow()][p.getColumn()] = true;
+        }
+
+        // TODO: add en passant later using chessMatch
+
+        return mat;
+    }
 
     @Override
     public String toString() {
         return "P";
     }
 }
-
