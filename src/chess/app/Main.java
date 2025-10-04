@@ -36,8 +36,6 @@ public class Main {
 
                 String currentPlayer = match.getCurrentPlayer() == Colour.WHITE ? whitePlayer : blackPlayer;
 
-
-
                 System.out.print(currentPlayer + "'s move (e.g., e2 e4) or type q to quit: ");
                 String input = sc.nextLine().trim();
 
@@ -55,10 +53,6 @@ public class Main {
                 ChessPosition target = BoardView.readChessPosition(positions[1]);
 
                 boolean[][] validMoves = match.possibleMoves(source);
-
-                BoardView.clearScreen();
-                BoardView.printBoard(match.getPieces());
-                System.out.println();
 
                 ChessPiece captured = match.performChessMove(source, target);
                 if (captured != null) capturedPieces.add(captured);

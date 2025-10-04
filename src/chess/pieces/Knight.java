@@ -18,8 +18,8 @@ public class Knight extends ChessPiece {
     }
 
     private boolean canMove(Position position) {
-        ChessPiece p = (ChessPiece) getBoard().piece(position);
-        return p == null || p.getColour()!= getColour();
+        ChessPiece pos = (ChessPiece) getBoard().piece(position);
+        return pos == null || pos.getColour()!= getColour();
     }
 
     @Override

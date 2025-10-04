@@ -1,4 +1,4 @@
-package chess.ui;
+package view;
 
 public class BoardColours {
 }
