@@ -1,16 +1,22 @@
 package chess.app;
 
 import chess.core.ChessMatch;
+import chess.exceptions.ChessException;
 import chess.model.ChessPiece;
+import chess.model.ChessPosition;
 import chess.model.Colour;
 import view.BoardView;
 
+import java.util.ArrayList;
+import java.util.InputMismatchException;
+import java.util.List;
 import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
 
         Scanner sc = new Scanner(System.in);
+        List<ChessPiece> capturedPieces = new ArrayList<>();
 
         System.out.println("WELCOME TO THE CONSOLE CHESS GAME\n");
 
@@ -24,10 +30,14 @@ public class Main {
 
         while (!match.isCheckMate()) {
             try {
-                ChessPiece[][] pieces = match.getPieces();
-                BoardView.printSimpleBoard(match.getPieces());
+                BoardView.clearScreen();
+                BoardView.printGame(match, capturedPieces);
+                System.out.println();
 
                 String currentPlayer = match.getCurrentPlayer() == Colour.WHITE ? whitePlayer : blackPlayer;
+
+
+
                 System.out.print(currentPlayer + "'s move (e.g., e2 e4) or type q to quit: ");
                 String input = sc.nextLine().trim();
 
@@ -35,10 +45,33 @@ public class Main {
                     System.out.println("Game ended by player.");
                     break;
                 }
-            } catch (Exception e) {
-                throw new RuntimeException(e);
+
+                String[] positions = input.split("\\s+");
+                if (positions.length != 2) {
+                    throw new InputMismatchException("Invalid input. Use format 'e2 e4'.");
+                }
+
+                ChessPosition source = BoardView.readChessPosition(positions[0]);
+                ChessPosition target = BoardView.readChessPosition(positions[1]);
+
+                boolean[][] validMoves = match.possibleMoves(source);
+
+                BoardView.clearScreen();
+                BoardView.printBoard(match.getPieces());
+                System.out.println();
+
+                ChessPiece captured = match.performChessMove(source, target);
+                if (captured != null) capturedPieces.add(captured);
+
+
+            } catch (ChessException | InputMismatchException e) {
+                System.out.println(e.getMessage());
+                System.out.print("Press Enter to try again...");
+                sc.nextLine();
             }
         }
+        BoardView.clearScreen();
+        BoardView.printGame(match, capturedPieces);
 
 
     }
