@@ -36,7 +36,7 @@ public class Main {
 
                 String currentPlayer = match.getCurrentPlayer() == Colour.WHITE ? whitePlayer : blackPlayer;
 
-                System.out.print(currentPlayer + "'s move (e.g., e2 e4) or type q to quit: ");
+                System.out.print(currentPlayer + "'s move (e.g., e2 e4 or e2e4) or type q to quit: ");
                 String input = sc.nextLine().trim();
 
                 if (input.equalsIgnoreCase("q") || input.equalsIgnoreCase("quit")) {
@@ -44,17 +44,29 @@ public class Main {
                     break;
                 }
 
-                String[] positions = input.split("\\s+");
+                // Normalize input
+                input = input.replaceAll("\\s+", ""); // remove all spaces
+
+                String[] positions;
+
+                // Case 1: no space (e.g., "e2e4")
+                if (input.length() == 4) {
+                    positions = new String[] { input.substring(0, 2), input.substring(2, 4) };
+                }
+                // Case 2: had spaces (e.g., "e2 e4")
+                else {
+                    positions = input.split("\\s+");
+                }
+
+                // Still invalid - throw error
                 if (positions.length != 2) {
-                    throw new InputMismatchException("Invalid input. Use format 'e2 e4'.");
+                    throw new InputMismatchException("Invalid input. Use format 'e2 e4' or 'e2e4'.");
                 }
 
                 ChessPosition source = BoardView.readChessPosition(positions[0]);
                 ChessPosition target = BoardView.readChessPosition(positions[1]);
 
-                boolean[][] validMoves = match.possibleMoves(source);
-
-                ChessPiece captured = match.performChessMove(source, target);
+                ChessPiece captured = match.performChessMove(source, target, sc);
                 if (captured != null) capturedPieces.add(captured);
 
 
