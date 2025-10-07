@@ -20,6 +20,11 @@ public class ChessPosition {
         int boardCol = column - 'a';         // 'a' → 0, 'h' → 7
         return new Position(boardRow, boardCol);
     }
+    
+    protected static ChessPosition fromPosition(Position position) {
+        return new ChessPosition((char) ('a' + position.getColumn()), 8 - position.getRow());
+    }
+
 
     @Override
     public String toString() {

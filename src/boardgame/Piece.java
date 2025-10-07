@@ -25,10 +25,6 @@ public abstract class Piece {
         return position;
     }
 
-    protected void setPosition(Position position) {
-        this.position = position;
-    }
-
     public abstract boolean[][] possibleMoves();
 
     public boolean possibleMove(Position position) {
@@ -38,18 +34,11 @@ public abstract class Piece {
     public boolean isThereAnyPossibleMove() {
         boolean[][] mat = possibleMoves();
         for (int row = 0; row < mat.length; row++) {
-            for (int col = 0; col < mat[row].length; col++) {
+            for (int col = 0; col < mat[row].length; col++)
                 if (mat[row][col]) {
                     return true;
                 }
-            }
         }
         return false;
-    }
-
-    protected boolean isValidMove(Position pos) {
-        if (!board.positionExists(pos)) return false;
-        Piece p = board.piece(pos);
-        return (p == null || p.getColour() != this.colour);
     }
 }
