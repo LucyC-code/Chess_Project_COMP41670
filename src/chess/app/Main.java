@@ -36,6 +36,8 @@ public class Main {
 
                 String currentPlayer = match.getCurrentPlayer() == Colour.WHITE ? whitePlayer : blackPlayer;
 
+                currentPlayer = currentPlayer.substring(0, 1).toUpperCase() + currentPlayer.substring(1);
+
                 System.out.print(currentPlayer + "'s move (e.g., e2 e4 or e2e4) or type q to quit: ");
                 String input = sc.nextLine().trim();
 
@@ -76,9 +78,6 @@ public class Main {
                 sc.nextLine();
             }
         }
-        BoardView.clearScreen();
-        BoardView.printGame(match, capturedPieces);
-
 
     }
 

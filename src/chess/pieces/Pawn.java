@@ -8,7 +8,7 @@ import chess.model.ChessPiece;
 
 public class Pawn extends ChessPiece {
 
-    private final ChessMatch chessMatch;
+    private ChessMatch chessMatch;
 
     public Pawn(Board board, Colour colour, ChessMatch chessMatch) {
         super(board, colour);
@@ -20,6 +20,7 @@ public class Pawn extends ChessPiece {
         boolean[][] mat = new boolean[getBoard().getRows()][getBoard().getColumns()];
         int dir = (getColour() == Colour.WHITE) ? -1 : 1;  // movement direction
         int startRow = (getColour() == Colour.WHITE) ? 6 : 1; // starting row (0-indexed, row 6 = white pawns, row 1 = black pawns)
+        int enPassantRow = (getColour() == Colour.WHITE) ? 3 : 4; //adding en Passant logic
 
         Board board = getBoard();
 
@@ -47,7 +48,17 @@ public class Pawn extends ChessPiece {
             mat[p.getRow()][p.getColumn()] = true;
         }
 
-        // TODO: add en passant later using chessMatch
+        // En Passant
+        if (position.getRow() == enPassantRow) {
+            for (int dc : new int[]{-1, 1}) {
+                Position side = new Position(position.getRow(), position.getColumn() + dc);
+                if (getBoard().positionExists(side) && isThereOpponentPiece(side) &&
+                        getBoard().piece(side) == chessMatch.getEnPassantVulnerable()) {
+                    mat[side.getRow() + dir][side.getColumn()] = true;
+                }
+            }
+        }
+
 
         return mat;
     }

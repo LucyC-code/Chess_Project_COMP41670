@@ -19,7 +19,7 @@ public class ChessMatch {
     private boolean check;
     private boolean checkMate;
     private ChessPiece promoted;
-
+    private ChessPiece enPassantVulnerable;
 
 
     private List<Piece> piecesOnTheBoard = new ArrayList<>();
@@ -39,6 +39,10 @@ public class ChessMatch {
 
     public Colour getCurrentPlayer() {
         return currentPlayer;
+    }
+
+    public ChessPiece getEnPassantVulnerable() {
+        return enPassantVulnerable;
     }
 
     public ChessMatch() {
@@ -73,11 +77,19 @@ public class ChessMatch {
         Piece capturedPiece = makeMove(source, target);
         ChessPiece movedPiece = (ChessPiece) board.piece(target);
 
+        if (testCheck(currentPlayer)) {
+            undoMove(source, target, capturedPiece);
+            System.out.println("Invalid move — you must move out of check!");
+            return null;
+        }
+
+
         // special move promotion
         promoted = null;
         if (movedPiece instanceof Pawn pawn &&
                 ((pawn.getColour() == Colour.WHITE && target.getRow() == 0) ||
                         (pawn.getColour() == Colour.BLACK && target.getRow() == 7))) {
+
 
             promoted = movedPiece;
 
@@ -90,12 +102,32 @@ public class ChessMatch {
             promoted = replacePromotedPiece(type);
         }
 
+        check = (testCheck(opponent(currentPlayer))) ? true : false;
 
-        nextTurn();
+        if (testCheck(opponent(getCurrentPlayer()))) {
+            System.out.println(opponent(getCurrentPlayer()) + " is in check!");
+            if (testCheckMate(opponent(getCurrentPlayer()))) {
+                System.out.println("CHECKMATE! " + getCurrentPlayer() + " wins!");
+                checkMate = true;
+                return (ChessPiece) capturedPiece;
+            }
+        }
+
+        if (testCheckMate(opponent(currentPlayer))) {
+            checkMate = true;
+        } else {
+            nextTurn();
+        }
+
+        // special move en passant vulnerability
+        if (movedPiece instanceof Pawn && Math.abs(source.getRow() - target.getRow()) == 2) {
+            enPassantVulnerable = movedPiece;
+        } else {
+            enPassantVulnerable = null;
+        }
+
         return (ChessPiece) capturedPiece;
     }
-
-
 
     public ChessPiece replacePromotedPiece(String type) {
         if (promoted == null) {
@@ -131,16 +163,46 @@ public class ChessMatch {
     private Piece makeMove(Position source, Position target) {
         ChessPiece p = (ChessPiece) board.removePiece(source);
         p.increaseMoveCounter();
+
+        // Try to capture whatever is on the target square first
         Piece capturedPiece = board.removePiece(target);
-        board.placePiece(p, target);
-        if (capturedPiece != null) {
-            piecesOnTheBoard.remove(capturedPiece);   // same logic
-            capturedPieces.add(capturedPiece);
+
+        if (capturedPiece instanceof King) {
+            // Undo the removal immediately
+            board.placePiece(capturedPiece, target);
+            board.placePiece(p, source);
+            throw new IllegalStateException("You cannot capture the King! Checkmate ends the game.");
         }
+
+        // Place the moving piece
+        board.placePiece(p, target);
+
+        if (p instanceof Pawn) {
+            boolean movedDiagonally = source.getColumn() != target.getColumn();
+            boolean noDirectCapture = capturedPiece == null;
+
+            if (movedDiagonally && noDirectCapture) {
+                int capturedRow = (p.getColour() == Colour.WHITE)
+                        ? target.getRow() + 1   // White captures pawn below
+                        : target.getRow() - 1;  // Black captures pawn above
+
+                Position pawnPosition = new Position(capturedRow, target.getColumn());
+                capturedPiece = board.removePiece(pawnPosition);
+
+                if (capturedPiece != null) {
+                    capturedPieces.add(capturedPiece);
+                    piecesOnTheBoard.remove(capturedPiece);
+                }
+            }
+        }
+        // Update captured piece list if any
+        if (capturedPiece != null) {
+            capturedPieces.add(capturedPiece);
+            piecesOnTheBoard.remove(capturedPiece);
+        }
+
         return capturedPiece;
     }
-
-
 
     private void placeNewPiece(char column, int row, Piece piece) {
         board.placePiece(piece, new ChessPosition(column, row).toPosition());
@@ -179,31 +241,44 @@ public class ChessMatch {
     }
 
     private boolean testCheckMate(Colour colour) {
-        if (!testCheck(colour)) return false;
+        // If the player is NOT in check → not checkmate
+        if (!testCheck(colour)) {
+            return false;
+        }
 
-        return piecesOnTheBoard.stream()
-                .filter(p -> ((ChessPiece) p).getColour() == colour)
-                .noneMatch(piece -> canEscapeCheck((ChessPiece) piece, colour));
-    }
+        //  Copy list to avoid ConcurrentModificationException
+        List<Piece> playerPieces = new ArrayList<>(piecesOnTheBoard);
 
-    private boolean canEscapeCheck(ChessPiece piece, Colour colour) {
-        boolean[][] moves = piece.possibleMoves();
+        // Try all possible moves for this colour
+        for (Piece p : playerPieces) {
+            ChessPiece piece = (ChessPiece) p;
 
-        for (int i = 0; i < board.getRows(); i++) {
-            for (int j = 0; j < board.getColumns(); j++) {
-                if (!moves[i][j]) continue;
+            // Skip pieces of the other colour
+            if (piece.getColour() != colour) continue;
 
-                Position source = piece.getChessPosition().toPosition();
-                Position target = new Position(i, j);
+            boolean[][] possibleMoves = piece.possibleMoves();
 
-                Piece captured = makeMove(source, target);
-                boolean stillInCheck = testCheck(colour);
-                undoMove(source, target, captured);
+            for (int i = 0; i < board.getRows(); i++) {
+                for (int j = 0; j < board.getColumns(); j++) {
+                    if (!possibleMoves[i][j]) continue;
 
-                if (!stillInCheck) return true;
+                    Position source = piece.getChessPosition().toPosition();
+                    Position target = new Position(i, j);
+
+                    Piece captured = makeMove(source, target);
+                    boolean stillInCheck = testCheck(colour);
+                    undoMove(source, target, captured);
+
+                    // If there's *any* legal move that gets out of check → not checkmate
+                    if (!stillInCheck) {
+                        return false;
+                    }
+                }
             }
         }
-        return false;
+
+        // No legal move avoids check → checkmate
+        return true;
     }
 
     private King king(Colour colour) {
@@ -268,6 +343,7 @@ public class ChessMatch {
 
 
     }
+
 
 }
 
