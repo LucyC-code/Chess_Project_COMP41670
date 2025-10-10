@@ -12,6 +12,8 @@ import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Scanner;
 
+import static view.BoardView.*;
+
 public class Main {
     public static void main(String[] args) {
 
@@ -30,7 +32,7 @@ public class Main {
 
         while (!match.isCheckMate()) {
             try {
-                BoardView.clearScreen();
+                clearScreen();
                 BoardView.printGame(match, capturedPieces);
                 System.out.println();
 
@@ -39,7 +41,7 @@ public class Main {
                 currentPlayer = currentPlayer.substring(0, 1).toUpperCase() + currentPlayer.substring(1);
 
                 System.out.print(currentPlayer + "'s move (e.g., e2 e4 or e2e4) or type q to quit: ");
-                String input = sc.nextLine().trim();
+                String input = sc.nextLine().trim().toLowerCase();
 
                 if (input.equalsIgnoreCase("q") || input.equalsIgnoreCase("quit")) {
                     System.out.println("Game ended by player.");
@@ -60,6 +62,19 @@ public class Main {
                     positions = input.split("\\s+");
                 }
 
+                if (input.matches("^[a-h][1-8]$")) {
+                    ChessPosition source = new ChessPosition(input.charAt(0), Character.getNumericValue(input.charAt(1)));
+                    boolean[][] moves = match.possibleMoves(source);
+
+                    clearScreen();
+                    printBoard(match.getPieces());
+                    printPossibleMoves(moves); // show e.g. "Possible moves: e3 e4"
+
+                    System.out.println("\nPress Enter to continue...");
+                    sc.nextLine();
+                    continue;
+                }
+
                 // Still invalid - throw error
                 if (positions.length != 2) {
                     throw new InputMismatchException("Invalid input. Use format 'e2 e4' or 'e2e4'.");
@@ -70,6 +85,21 @@ public class Main {
 
                 ChessPiece captured = match.performChessMove(source, target, sc);
                 if (captured != null) capturedPieces.add(captured);
+
+                if (match.isCheckMate()) {
+                    clearScreen();
+                    BoardView.printGame(match, capturedPieces);
+                    System.out.println();
+
+                    // Determine winner
+                    String winner = (match.getCurrentPlayer() == Colour.WHITE) ? whitePlayer : blackPlayer;
+                    winner = winner.substring(0, 1).toUpperCase() + winner.substring(1);
+
+                    System.out.println("CHECKMATE!");
+                    System.out.println(winner + " wins!");
+                    break; // exit the main game loop
+                }
+
 
 
             } catch (ChessException | InputMismatchException e) {
