@@ -73,10 +73,9 @@ public class Board {
         }
         Piece removed = pieces[position.getRow()][position.getColumn()];
         pieces[position.getRow()][position.getColumn()] = null; // clear square
-        removed.position = null; // optional: clear back-reference
+        removed.position = null;
         return removed; // return the exact same object reference
     }
-
 
 
     // checks the position is within the bounds of the board

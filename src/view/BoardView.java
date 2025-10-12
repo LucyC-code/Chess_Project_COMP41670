@@ -66,7 +66,6 @@ public class BoardView {
 
         for (int i = 0; i < pieces.length; i++) {
             for (int line = 0; line < squareHeight; line++) {
-
                 if (line == squareHeight / 2) {
                     System.out.print((8 - i) + " "); // print rank label in middle row
                 } else {
@@ -95,11 +94,13 @@ public class BoardView {
         }
 
         // print file letters (a–h)
-        System.out.print(" ");
+        System.out.print("   ");
         for (char c = 'a'; c <= 'h'; c++) {
-            System.out.print(" ".repeat(squareWidth / 4) + c + " ".repeat(squareWidth / 2));
+            int totalPadding = squareWidth - 1;
+            int leftPad = totalPadding / 2;
+            int rightPad = totalPadding - leftPad;
+            System.out.print(" ".repeat(leftPad) + c + " ".repeat(rightPad));
         }
-        System.out.println();
     }
 
 

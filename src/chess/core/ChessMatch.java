@@ -79,9 +79,9 @@ public class ChessMatch {
 
         if (testCheck(currentPlayer)) {
             undoMove(source, target, capturedPiece);
-            System.out.println("Invalid move — you must move out of check!");
-            return null;
+            throw new ChessException("Put yourself in check");
         }
+
 
 
         // special move promotion
@@ -102,23 +102,14 @@ public class ChessMatch {
             promoted = replacePromotedPiece(type);
         }
 
-        check = (testCheck(opponent(currentPlayer))) ? true : false;
 
-        if (testCheck(opponent(getCurrentPlayer()))) {
-            System.out.println(opponent(getCurrentPlayer()) + " is in check!");
-            if (testCheckMate(opponent(getCurrentPlayer()))) {
-                System.out.println("CHECKMATE! " + getCurrentPlayer() + " wins!");
-                checkMate = true;
-                return (ChessPiece) capturedPiece;
-            }
-        }
+        check = testCheck(opponent(currentPlayer));
 
         if (testCheckMate(opponent(currentPlayer))) {
             checkMate = true;
         } else {
             nextTurn();
         }
-
         // special move en passant vulnerability
         if (movedPiece instanceof Pawn && Math.abs(source.getRow() - target.getRow()) == 2) {
             enPassantVulnerable = movedPiece;
@@ -234,10 +225,16 @@ public class ChessMatch {
     private boolean testCheck(Colour colour) {
         Position kingPos = king(colour).getChessPosition().toPosition();
 
-        return piecesOnTheBoard.stream()
-                .filter(p -> ((ChessPiece) p).getColour() == opponent(colour))
-                .map(Piece::possibleMoves)
-                .anyMatch(moves -> moves[kingPos.getRow()][kingPos.getColumn()]);
+        for (Piece p : piecesOnTheBoard) {
+            ChessPiece cp = (ChessPiece) p;
+            if (cp.getColour() == opponent(colour)) {
+                boolean[][] moves = p.possibleMoves();
+                if (moves[kingPos.getRow()][kingPos.getColumn()]) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private boolean testCheckMate(Colour colour) {
@@ -266,11 +263,10 @@ public class ChessMatch {
                     Position target = new Position(i, j);
 
                     Piece captured = makeMove(source, target);
-                    boolean stillInCheck = testCheck(colour);
+                    boolean testCheck = testCheck(colour);
                     undoMove(source, target, captured);
 
-                    // If there's *any* legal move that gets out of check → not checkmate
-                    if (!stillInCheck) {
+                    if (!testCheck) {
                         return false;
                     }
                 }
