@@ -1,6 +1,7 @@
 package chess.pieces;
 
 import boardgame.Board;
+import boardgame.Piece;
 import boardgame.Position;
 import chess.core.ChessMatch;
 import chess.model.ChessPiece;
@@ -42,6 +43,13 @@ public class King extends ChessPiece {
             }
         }
 
+        // Castling
+        if (getMoveCounter() == 0 && !chessMatch.isCheck()) {
+            tryCastling(position, +3, new int[]{+1, +2}, mat);          // Kingside
+            tryCastling(position, -4, new int[]{-1, -2, -3}, mat);      // Queenside
+        }
+
+
 
         return mat;
     }
@@ -49,4 +57,34 @@ public class King extends ChessPiece {
 
         return chessMatch;
     }
+    /**
+     * Tries to mark castling moves if the path is clear and the rook is eligible.
+     */
+    private void tryCastling(Position position, int rookOffset, int[] pathOffsets, boolean[][] mat) {
+        Position rookPos = new Position(position.getRow(), position.getColumn() + rookOffset);
+        if (testRookCastling(rookPos)) {
+            boolean pathClear = true;
+            for (int offset : pathOffsets) {
+                Position pathPos = new Position(position.getRow(), position.getColumn() + offset);
+                if (getBoard().piece(pathPos) != null) {
+                    pathClear = false;
+                    break;
+                }
+            }
+            // mark destination square if path is clear
+            if (pathClear) {
+                int kingTargetOffset = (rookOffset > 0) ? +2 : -2;
+                mat[position.getRow()][position.getColumn() + kingTargetOffset] = true;
+            }
+        }
+    }
+
+    private boolean testRookCastling(Position position) {
+        Piece p = getBoard().piece(position);
+        return (p instanceof Rook) &&
+                ((Rook) p).getColour() == getColour() &&
+                ((Rook) p).getMoveCounter() == 0;
+    }
+
+
 }
